@@ -1,18 +1,18 @@
 [submodule "riscv-tools"]
 	path = riscv-tools
-	url = https://github.com/riscv/riscv-tools.git
+	url = https://github.com/hstogether/riscv-tools.git
 [submodule "hardfloat"]
 	path = hardfloat
-	url = https://github.com/ucb-bar/berkeley-hardfloat.git
+	url = https://github.com/hstogether/berkeley-hardfloat.git
 [submodule "torture"]
 	path = torture
-	url = https://github.com/ucb-bar/riscv-torture.git
+	url = https://github.com/hstogether/riscv-torture.git
 [submodule "chisel3"]
 	path = chisel3
-	url = https://github.com/ucb-bar/chisel3.git
+	url = https://github.com/hstogether/chisel3.git
 [submodule "firrtl"]
 	path = firrtl
-	url = https://github.com/ucb-bar/firrtl.git
+	url = https://github.com/hstogether/firrtl.git
 [submodule "boom"]
 	path = boom
-	url = https://github.com/ucb-bar/riscv-boom.git
+	url = https://github.com/hstogether/riscv-boom.git
