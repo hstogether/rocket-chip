@@ -19,6 +19,7 @@ trait CoreParams {
   val useCompressed: Boolean
   val mulDiv: Option[MulDivParams]
   val fpu: Option[FPUParams]
+  val fpu: Option[HFPUParams] // Jecy
   val fetchWidth: Int
   val decodeWidth: Int
   val retireWidth: Int
@@ -26,7 +27,7 @@ trait CoreParams {
 }
 
 trait HasCoreParameters extends HasTileParameters {
-  val coreParams: CoreParams = tileParams.core
+  val coreParams: CoreParams = tileParams.core // We don't need to modify the tileParmas in BaseTild.scala
 
   val xLen = p(XLen)
   val fLen = xLen // TODO relax this
@@ -34,6 +35,7 @@ trait HasCoreParameters extends HasTileParameters {
 
   val usingMulDiv = coreParams.mulDiv.nonEmpty
   val usingFPU = coreParams.fpu.nonEmpty
+  val usingHFPU = coreParams.hfpu.nonEmpty  // Jecy
   val usingAtomics = coreParams.useAtomics
   val usingCompressed = coreParams.useCompressed
 
