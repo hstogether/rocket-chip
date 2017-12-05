@@ -19,7 +19,7 @@ trait CoreParams {
   val useCompressed: Boolean
   val mulDiv: Option[MulDivParams]
   val fpu: Option[FPUParams]
-  val fpu: Option[HFPUParams] // Jecy
+  val hfpu: Option[HFPUParams] // Jecy
   val fetchWidth: Int
   val decodeWidth: Int
   val retireWidth: Int
