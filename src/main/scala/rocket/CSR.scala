@@ -27,7 +27,7 @@ class MStatus extends Bundle {
   val pum = Bool()
   val mprv = Bool()
   val xs = UInt(width = 2)
-  val fs = UInt(width = 2)
+  val fs = UInt(width = 2) // 应该是代表浮点，但确切含义并不清楚 -- Jecy
   val mpp = UInt(width = 2)
   val hpp = UInt(width = 2)
   val spp = UInt(width = 1)
@@ -274,6 +274,7 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
     (if (usingAtomics) "A" else "") +
     (if (usingFPU) "F" else "") +
     (if (usingFPU && xLen > 32) "D" else "") +
+    (if (usingHFPU) "HF" else "") + // Jecy
     (if (usingCompressed) "C" else "") +
     (if (usingRoCC) "X" else "")
   val isaString = "I" + isaMaskString +
@@ -318,7 +319,7 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
   if (usingDebug)
     read_mapping ++= debug_csrs
 
-  if (usingFPU)
+  if (usingFPU || usingHFPU) // Jecy
     read_mapping ++= fp_csrs
 
   for (((e, c), i) <- (reg_hpmevent.padTo(CSR.nHPM, UInt(0))
@@ -384,7 +385,7 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
 
   val decoded_addr = read_mapping map { case (k, v) => k -> (io.rw.addr === k) }
   val addr_valid = decoded_addr.values.reduce(_||_)
-  val fp_csr = if (usingFPU) decoded_addr.filterKeys(fp_csrs contains _ ).values reduce(_||_) else Bool(false)
+  val fp_csr = if (usingFPU || usingHFPU) decoded_addr.filterKeys(fp_csrs contains _ ).values reduce(_||_) else Bool(false) // Jecy
   val hpm_csr = if (usingUser) io.rw.addr >= CSR.firstCtr && io.rw.addr < CSR.firstCtr + CSR.nCtr else Bool(false)
   val hpm_en = reg_debug || reg_mstatus.prv === PRV.M ||
     (reg_mstatus.prv === PRV.S && reg_mscounteren(io.rw.addr(log2Ceil(CSR.nCtr)-1, 0))) ||
@@ -530,7 +531,7 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
         when (new_mstatus.vm === 0) { reg_mstatus.vm := 0 }
         when (new_mstatus.vm === vm_on) { reg_mstatus.vm := vm_on }
       }
-      if (usingVM || usingFPU) reg_mstatus.fs := Fill(2, new_mstatus.fs.orR)
+      if (usingVM || usingFPU || usingHFPU) reg_mstatus.fs := Fill(2, new_mstatus.fs.orR) // Jecy
       if (usingRoCC) reg_mstatus.xs := Fill(2, new_mstatus.xs.orR)
     }
     when (decoded_addr(CSRs.misa)) {
@@ -561,7 +562,7 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
     writeCounter(CSRs.mcycle, reg_cycle, wdata)
     writeCounter(CSRs.minstret, reg_instret, wdata)
 
-    if (usingFPU) {
+    if (usingFPU || usingHFPU) { // Jecy
       when (decoded_addr(CSRs.fflags)) { reg_fflags := wdata }
       when (decoded_addr(CSRs.frm))    { reg_frm := wdata }
       when (decoded_addr(CSRs.fcsr))   { reg_fflags := wdata; reg_frm := wdata >> reg_fflags.getWidth }
