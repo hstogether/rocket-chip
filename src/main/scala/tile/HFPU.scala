@@ -14,7 +14,7 @@ import util._
 
 case class HFPUParams(
   divSqrt: Boolean = false,
-  hfmaLatency: Int = 3,
+  hfmaLatency: Int = 3
   //sfmaLatency: Int = 3,
   //dfmaLatency: Int = 4
 )
