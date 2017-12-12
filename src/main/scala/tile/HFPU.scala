@@ -15,8 +15,6 @@ import util._
 case class HFPUParams(
   divSqrt: Boolean = false,
   hfmaLatency: Int = 3
-  //sfmaLatency: Int = 3,
-  //dfmaLatency: Int = 4
 )
 
 // Jecy
@@ -34,6 +32,39 @@ trait HasHFPUParameters {
   val maxSigWidth = floatWidths.map(_._2).max
 }
 
+trait HasHFPUCtrlSigs {
+  val cmd = Bits(width = FCMD_WIDTH)
+  val ldst = Bool()
+  val wen = Bool()
+  val ren1 = Bool()
+  val ren2 = Bool()
+  val ren3 = Bool()
+  val swap12 = Bool()
+  val swap23 = Bool()
+  val single = Bool()
+  val fromint = Bool()
+  val toint = Bool()
+  val fastpipe = Bool()
+  val fma = Bool()
+  val div = Bool()
+  val sqrt = Bool()
+  val round = Bool()
+  val wflags = Bool()
+  val halfp = Bool(false) // Is a half-precision floating-point
+  val tariss = Bool(false) //target is single floating-point
+}
+
+// May change in the future
+class HFPInput(implicit p: Parameters) extends CoreBundle()(p) with HasHFPUCtrlSigs {
+  val rm = Bits(width = 3)
+  val typ = Bits(width = 2)
+  val in1 = Bits(width = fLen+1)
+  val in2 = Bits(width = fLen+1)
+  val in3 = Bits(width = fLen+1)
+
+  override def cloneType = new HFPInput().asInstanceOf[this.type]
+}
+
 abstract class HFPUModule(implicit p: Parameters) extends CoreModule()(p) with HasHFPUParameters
 
 // Jecy
@@ -46,12 +77,12 @@ class HFPToInt(implicit p: Parameters) extends HFPUModule()(p) {
     override def cloneType = new Output().asInstanceOf[this.type]
   }
   val io = new Bundle {
-    val in = Valid(new FPInput).flip
-    val as_double = new FPInput().asOutput
+    val in = Valid(new HFPInput).flip
+    val as_double = new HFPInput().asOutput
     val out = Valid(new Output)
   }
 
-  val in = Reg(new FPInput)
+  val in = Reg(new HFPInput)
   val valid = Reg(next=io.in.valid)
 
 
@@ -102,7 +133,7 @@ class HFPToInt(implicit p: Parameters) extends HFPUModule()(p) {
 // Jecy
 class IntToHFP(val latency: Int)(implicit p: Parameters) extends HFPUModule()(p) {
   val io = new Bundle {
-    val in = Valid(new FPInput).flip
+    val in = Valid(new HFPInput).flip
     val out = Valid(new FPResult)
   }
 
@@ -140,7 +171,7 @@ class IntToHFP(val latency: Int)(implicit p: Parameters) extends HFPUModule()(p)
 // Jecy
 class HFPToHFP(val latency: Int)(implicit p: Parameters) extends HFPUModule()(p) {
     val io = new Bundle {
-      val in = Valid(new FPInput).flip
+      val in = Valid(new HFPInput).flip
       val out = Valid(new FPResult)
       val lt = Bool(INPUT) // from FPToInt
     }
@@ -148,7 +179,7 @@ class HFPToHFP(val latency: Int)(implicit p: Parameters) extends HFPUModule()(p)
     val in = Pipe(io.in)
 
     val signNum = Mux(in.bits.rm(1), in.bits.in1 ^ in.bits.in2, Mux(in.bits.rm(0), ~in.bits.in2, in.bits.in2))
-    val fsgnj_s = Cat(signNum(32), in.bits.in1(31, 0))
+    val fsgnj_h = Cat(signNum(32), in.bits.in1(31, 0))
     val fsgnj = fsgnj_h
 
     val mux = Wire(new FPResult)
@@ -175,22 +206,22 @@ class HFPToHFP(val latency: Int)(implicit p: Parameters) extends HFPUModule()(p)
       case 16 =>
       case 32 =>
       case 64 =>
-        when (in.bits.cmd === FCMD_CVT_FF) {
-          when (in.bits.half && tariss) {
+        when (in.bits.cmd === FCMD_CVT_FF/* && in.bits.halfp*/) { // TODO: in.bits.hflfp
+          when (in.bits.halfp && in.bits.tariss) {
             val h2s = Module(new hardfloat.RecFNToRecFN(hExpWidth, hSigWidth, sExpWidth, sSigWidth))
             h2s.io.in := in.bits.in1
             h2s.io.roundingMode := in.bits.rm
-          mux.data := Cat(UInt((BigInt(1) << (fLen - 32)) - 1), d2s.io.out)
-          mux.exc := d2s.io.exceptionFlags
-        }.elsewhen (in.bits.halfp && tariss)
-        }.otherwise {
-          val s2d = Module(new hardfloat.RecFNToRecFN(hExpWidth, hSigWidth, dExpWidth, dSigWidth))
-          h2d.io.in := in.bits.in1
-          h2d.io.roundingMode := in.bits.rm
-          mux.data := s2d.io.out
-          mux.exc := s2d.io.exceptionFlags
-        }
-    }
+            mux.data := Cat(UInt((BigInt(1) << (fLen - 32)) - 1), h2s.io.out)
+            mux.exc := h2s.io.exceptionFlags
+          }.otherwise {
+            val h2d = Module(new hardfloat.RecFNToRecFN(hExpWidth, hSigWidth, dExpWidth, dSigWidth))
+            h2d.io.in := in.bits.in1
+            h2d.io.roundingMode := in.bits.rm
+            mux.data := h2d.io.out
+            mux.exc := h2d.io.exceptionFlags
+          }
+    	}
+     }
 
   io.out <> Pipe(in.valid, mux, latency-1)
 }
