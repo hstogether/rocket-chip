@@ -50,8 +50,8 @@ trait HasHFPUCtrlSigs {
   val sqrt = Bool()
   val round = Bool()
   val wflags = Bool()
-  val halfp = Bool(false) // Is a half-precision floating-point
-  val tariss = Bool(false) //target is single floating-point
+  val halfp = Bool() // Is a half-precision floating-point
+  val tariss = Bool() //target is single floating-point
 }
 
 // May change in the future
