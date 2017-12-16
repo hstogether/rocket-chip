@@ -28,7 +28,8 @@ case class RocketCoreParams(
   fastLoadByte: Boolean = false,
   fastJAL: Boolean = false,
   mulDiv: Option[MulDivParams] = Some(MulDivParams()),
-  fpu: Option[FPUParams] = Some(FPUParams())
+  fpu: Option[FPUParams] = Some(FPUParams()),
+  hfpu: Option[HFPUParams] = Some(HFPUParams())
 ) extends CoreParams {
   val fetchWidth: Int = if (useCompressed) 2*fWidth else fWidth //1
   //  fetchWidth doubled, but coreInstBytes halved, for RVC:

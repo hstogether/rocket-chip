@@ -19,6 +19,7 @@ trait CoreParams {
   val useCompressed: Boolean
   val mulDiv: Option[MulDivParams]
   val fpu: Option[FPUParams]
+  val hfpu: Option[HFPUParams]
   val fetchWidth: Int
   val decodeWidth: Int
   val retireWidth: Int
@@ -34,6 +35,7 @@ trait HasCoreParameters extends HasTileParameters {
 
   val usingMulDiv = coreParams.mulDiv.nonEmpty
   val usingFPU = coreParams.fpu.nonEmpty
+  val usingHFPU = coreParams.hfpu.nonEmpty
   val usingAtomics = coreParams.useAtomics
   val usingCompressed = coreParams.useCompressed
 
