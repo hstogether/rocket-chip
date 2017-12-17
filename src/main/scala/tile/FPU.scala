@@ -14,6 +14,7 @@ import util._
 
 case class FPUParams(
   divSqrt: Boolean = true,
+  hfmaLatency: Int = 3,
   sfmaLatency: Int = 3,
   dfmaLatency: Int = 4
 )
