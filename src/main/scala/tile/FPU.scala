@@ -362,7 +362,7 @@ class FPToInt(implicit p: Parameters) extends FPUModule()(p) {
   io.as_double := in
 }
 
-/**
+/*
 class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
   class Output extends Bundle {
     val lt = Bool()
@@ -497,7 +497,7 @@ class IntToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     io.out <> Pipe(in.valid, mux, latency-1)
   }
 
-/**
+/*
 class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
   val io = new Bundle {
     val in = Valid(new FPInput).flip
@@ -552,7 +552,7 @@ class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
   }
 */
 
-class FPToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
+  class FPToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     val io = new Bundle {
       val in = Valid(new FPInput).flip
       val out = Valid(new FPResult)
@@ -613,7 +613,69 @@ class FPToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
 
   io.out <> Pipe(in.valid, mux, latency-1)
 }
+/*
+  class FPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
+    val io = new Bundle {
+      val in = Valid(new FPInput).flip
+      val out = Valid(new FPResult)
+      val lt = Bool(INPUT) // from FPToInt
+    }
 
+    val in = Pipe(io.in)
+
+    val signNum = Mux(in.bits.rm(1), in.bits.in1 ^ in.bits.in2, Mux(in.bits.rm(0), ~in.bits.in2, in.bits.in2))
+    val fsgnj_s = Cat(signNum(32), in.bits.in1(31, 0))
+    val fsgnj = fLen match {
+      case 32 => fsgnj_s
+      case 64 => Mux(in.bits.single, Cat(in.bits.in1 >> 33, fsgnj_s),
+                                     Cat(signNum(64), in.bits.in1(63, 0)))
+    }
+    val mux = Wire(new FPResult)
+    mux.exc := UInt(0)
+    mux.data := fsgnj
+
+    when (in.bits.cmd === FCMD_MINMAX) {
+      def doMinMax(expWidth: Int, sigWidth: Int) = {
+        val isnan1 = IsNaNRecFN(expWidth, sigWidth, in.bits.in1)
+        val isnan2 = IsNaNRecFN(expWidth, sigWidth, in.bits.in2)
+        val issnan1 = IsSNaNRecFN(expWidth, sigWidth, in.bits.in1)
+        val issnan2 = IsSNaNRecFN(expWidth, sigWidth, in.bits.in2)
+        val invalid = issnan1 || issnan2
+        val isNaNOut = invalid || (isnan1 && isnan2)
+        val cNaN = floatWidths.filter(_._1 >= expWidth).map(x => CanonicalNaN(x._1, x._2)).reduce(_+_)
+        (isnan2 || in.bits.rm(0) =/= io.lt && !isnan1, invalid, isNaNOut, cNaN)
+      }
+      val (isLHS, isInvalid, isNaNOut, cNaN) = fLen match {
+        case 32 => doMinMax(sExpWidth, sSigWidth)
+        case 64 => MuxT(in.bits.single, doMinMax(sExpWidth, sSigWidth), doMinMax(dExpWidth, dSigWidth))
+      }
+      mux.exc := isInvalid << 4
+      mux.data := Mux(isNaNOut, cNaN, Mux(isLHS, in.bits.in1, in.bits.in2))
+    }
+
+    fLen match {
+      case 32 =>
+      case 64 =>
+        when (in.bits.cmd === FCMD_CVT_FF) {
+          when (in.bits.single) {
+            val d2s = Module(new hardfloat.RecFNToRecFN(dExpWidth, dSigWidth, sExpWidth, sSigWidth))
+            d2s.io.in := in.bits.in1
+            d2s.io.roundingMode := in.bits.rm
+          mux.data := Cat(UInt((BigInt(1) << (fLen - 32)) - 1), d2s.io.out)
+          mux.exc := d2s.io.exceptionFlags
+        }.otherwise {
+          val s2d = Module(new hardfloat.RecFNToRecFN(sExpWidth, sSigWidth, dExpWidth, dSigWidth))
+          s2d.io.in := in.bits.in1
+          s2d.io.roundingMode := in.bits.rm
+          mux.data := s2d.io.out
+          mux.exc := s2d.io.exceptionFlags
+        }
+      }
+  }
+
+  io.out <> Pipe(in.valid, mux, latency-1)
+}
+*/
 class FPUFMAPipe(val latency: Int, expWidth: Int, sigWidth: Int)(implicit p: Parameters) extends FPUModule()(p) {
   val io = new Bundle {
     val in = Valid(new FPInput).flip

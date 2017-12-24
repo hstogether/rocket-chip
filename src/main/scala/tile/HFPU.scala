@@ -14,7 +14,6 @@ import util._
 
 
 // Jecy
-/**
 trait HasHFPUParameters {
   val fLen: Int
   val (hExpWidth, hSigWidth) = (5, 11)
@@ -28,9 +27,8 @@ trait HasHFPUParameters {
   val maxExpWidth = floatWidths.map(_._1).max
   val maxSigWidth = floatWidths.map(_._2).max
 }
-*/
 
-abstract class HFPUModule(implicit p: Parameters) extends CoreModule()(p) with HasFPUParameters
+abstract class HFPUModule(implicit p: Parameters) extends CoreModule()(p) with HasHFPUParameters
 
 // Jecy
 class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
@@ -126,7 +124,7 @@ class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
     l2h.io.signedIn := ~in.bits.typ(0)
     l2h.io.in := intValue
     l2h.io.roundingMode := in.bits.rm
-    mux.data := Cat(UInt((BigInt(1) << (fLen - 16)) - 1), l2h.io.out)
+    mux.data := Cat(UInt((BigInt(1) << (fLen - 32)) - 1), l2h.io.out)
     mux.exc := l2h.io.exceptionFlags
    }
 
@@ -250,8 +248,7 @@ class FPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
   io.out <> Pipe(in.valid, mux, latency-1)
 }
 
-/**
-class HFPToFP(implicit p: Parameters) extends FPUModule()(p) {
+class HFPToFp(implicit p: Parameters) extends FPUModule()(p) {
   class Output extends Bundle {
     val lt = Bool()
     val store = Bits(width = fLen)
@@ -330,6 +327,5 @@ class HFPToFP(implicit p: Parameters) extends FPUModule()(p) {
   io.out.bits.lt := dcmp.io.lt
   io.as_double := in
 }
-*/s
 
 
