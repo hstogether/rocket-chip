@@ -362,7 +362,7 @@ class FPToInt(implicit p: Parameters) extends FPUModule()(p) {
   io.as_double := in
 }
 
-/*
+/**
 class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
   class Output extends Bundle {
     val lt = Bool()
@@ -497,7 +497,7 @@ class IntToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     io.out <> Pipe(in.valid, mux, latency-1)
   }
 
-/*
+/**
 class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
   val io = new Bundle {
     val in = Valid(new FPInput).flip
@@ -552,7 +552,7 @@ class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
   }
 */
 
-  class FPToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
+class FPToFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     val io = new Bundle {
       val in = Valid(new FPInput).flip
       val out = Valid(new FPResult)
