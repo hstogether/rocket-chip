@@ -270,10 +270,10 @@ trait HasFPUParameters {
   val (sExpWidth, sSigWidth) = (8, 24)
   val (dExpWidth, dSigWidth) = (11, 53)
   val floatWidths = fLen match {
-    case 32 => List((sExpWidth, sSigWidth))
-    case 64 => List((sExpWidth, sSigWidth), (dExpWidth, dSigWidth))
-    //case 32 => List((hExpWidth, hSigWidth),(sExpWidth, sSigWidth))
-    //case 64 => List((hExpWidth, hSigWidth),(sExpWidth, sSigWidth), (dExpWidth, dSigWidth))
+    //case 32 => List((sExpWidth, sSigWidth))
+    //case 64 => List((sExpWidth, sSigWidth), (dExpWidth, dSigWidth))
+    case 32 => List((hExpWidth, hSigWidth),(sExpWidth, sSigWidth))
+    case 64 => List((hExpWidth, hSigWidth),(sExpWidth, sSigWidth), (dExpWidth, dSigWidth))
   }
 
   val maxExpWidth = floatWidths.map(_._1).max
