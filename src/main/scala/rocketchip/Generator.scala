@@ -66,6 +66,19 @@ object Generator extends util.GeneratorApp {
         }
       }
     }
+    coreParams.hfpu foreach { case cfg =>
+      if (xlen == 32) {
+        //TestGeneration.addSuites(env.map(rv32uhNoDiv))
+      } else {
+        //TestGeneration.addSuite(rv32udBenchmarks)
+        TestGeneration.addSuites(env.map(rv64uhNoDiv))
+        //TestGeneration.addSuites(env.map(rv64udNoDiv))
+        //if (cfg.divSqrt) {
+        //  TestGeneration.addSuites(env.map(rv64uh))
+          //TestGeneration.addSuites(env.map(rv64ud))
+        //}
+      }
+    }
     if (coreParams.useAtomics)    TestGeneration.addSuites(env.map(if (xlen == 64) rv64ua else rv32ua))
     if (coreParams.useCompressed) TestGeneration.addSuites(env.map(if (xlen == 64) rv64uc else rv32uc))
     val (rvi, rvu) =

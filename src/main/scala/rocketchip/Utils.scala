@@ -65,9 +65,10 @@ object GenerateConfigString {
         val a = if (t.core.useAtomics) "a" else ""
         val f = if (t.core.fpu.nonEmpty) "f" else ""
         val d = if (t.core.fpu.nonEmpty && p(XLen) > 32) "d" else ""
+        val h = if (t.core.hfpu.nonEmpty && p(XLen) > 32) "h" else ""
         val c = if (t.core.useCompressed) "c" else ""
         val s = if (t.core.useVM) "s" else ""
-        s"rv${p(XLen)}i$m$a$f$d$c$s"
+        s"rv${p(XLen)}i$m$a$f$d$h$c$s"
       }
       res append s"  $i {\n"
       res append  "    0 {\n"
