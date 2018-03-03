@@ -71,10 +71,10 @@ object Generator extends util.GeneratorApp {
         //TestGeneration.addSuites(env.map(rv32uhNoDiv))
       } else {
         //TestGeneration.addSuite(rv32udBenchmarks)
-        TestGeneration.addSuites(env.map(rv64uhNoDiv))
+        //TestGeneration.addSuites(env.map(rv64uhNoDiv))
         //TestGeneration.addSuites(env.map(rv64udNoDiv))
         //if (cfg.divSqrt) {
-        //  TestGeneration.addSuites(env.map(rv64uh))
+          TestGeneration.addSuites(env.map(rv64uh))
           //TestGeneration.addSuites(env.map(rv64ud))
         //}
       }
