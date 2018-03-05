@@ -60,7 +60,7 @@ class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
   val classify_h = ClassifyRecFN(hExpWidth, hSigWidth, in.in1)
   val classify_out = classify_h
 
-  val dcmp = Module(new hardfloat.CompareRecFN(maxExpWidth, maxSigWidth))
+  val dcmp = Module(new hardfloat.CompareRecFN(hExpWidth, hSigWidth))
   dcmp.io.a := in.in1
   dcmp.io.b := in.in2
   dcmp.io.signaling := !in.rm(1)
