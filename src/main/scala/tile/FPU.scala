@@ -37,11 +37,11 @@ object FPConstants
   //def FCMD_CVT_HFF= BitPat("b")
   def FCMD_CMP =    BitPat("b?01??")
   def FCMD_MV_XF =  BitPat("b?11??")
-  //def FCMD_MV_XHF= BitPat("b")
+  def FCMD_MV_HF=   BitPat("b11111")
   def FCMD_CVT_FI = BitPat("b??0??")
   //def FCMD_CVT_FHF= BitPat("b")
   def FCMD_MV_FX =  BitPat("b??1??")
-  //def FCMD_MV_FHF = BitPat("b")
+  def FCMD_MV_FH =  BitPat("b11101")
   def FCMD_X =      BitPat("b?????")
   val FCMD_WIDTH = 5
 
