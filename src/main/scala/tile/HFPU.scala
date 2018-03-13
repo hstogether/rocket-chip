@@ -135,7 +135,7 @@ class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
     l2h.io.signedIn := ~in.bits.typ(0)
     l2h.io.in := intValue
     l2h.io.roundingMode := in.bits.rm
-    mux.data := Cat(UInt((BigInt(1) << (fLen - 32)) - 1), l2h.io.out)
+    mux.data := Cat(UInt((BigInt(1) << (fLen - 16)) - 1), l2h.io.out)
     mux.exc := l2h.io.exceptionFlags
    }
 
