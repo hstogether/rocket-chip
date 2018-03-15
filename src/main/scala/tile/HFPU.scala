@@ -79,7 +79,7 @@ class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
     val minXLen = 32
     val n = log2Ceil(xLen/minXLen) + 1
     for (i <- 0 until n) {
-      val conv = Module(new hardfloat.RecFNToIN(maxExpWidth, maxSigWidth, minXLen << i))
+      val conv = Module(new hardfloat.RecFNToIN(hExpWidth, hSigWidth, minXLen << i))
       conv.io.in := in.in1
       conv.io.roundingMode := in.rm
       conv.io.signedOut := ~in.typ(0)
