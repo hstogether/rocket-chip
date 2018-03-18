@@ -30,6 +30,55 @@ trait HasHFPUParameters {
 
 abstract class HFPUModule(implicit p: Parameters) extends CoreModule()(p) with HasHFPUParameters
 
+class HFPResult(implicit p: Parameters) extends CoreBundle()(p) {
+  val data = Bits(width = hfLen+hfLen/16)
+  val exc = Bits(width = 5)
+}
+
+class HFPInput(implicit p: Parameters) extends CoreBundle()(p) with HasFPUCtrlSigs {
+  val rm = Bits(width = 3)
+  val typ = Bits(width = 2)
+  val in1 = Bits(width = hfLen+hfLen/16)
+  val in2 = Bits(width = hfLen+hfLen/16)
+  val in3 = Bits(width = hfLen+hfLen/16)
+
+  override def cloneType = new HFPInput().asInstanceOf[this.type]
+}
+
+class HFPUFMAPipe(val latency: Int, expWidth: Int, sigWidth: Int)(implicit p: Parameters) extends FPUModule()(p) {
+  val io = new Bundle {
+    val in = Valid(new HFPInput).flip
+    val out = Valid(new HFPResult)
+  }
+
+  val width = sigWidth + expWidth
+  val one = UInt(1) << (width-1)
+  val zero = (io.in.bits.in1(width) ^ io.in.bits.in2(width)) << width
+
+  val valid = Reg(next=io.in.valid)
+  val in = Reg(new HFPInput)
+  when (io.in.valid) {
+    in := io.in.bits
+    val cmd_fma = io.in.bits.ren3
+    val cmd_addsub = io.in.bits.swap23
+    in.cmd := Cat(io.in.bits.cmd(1) & (cmd_fma || cmd_addsub), io.in.bits.cmd(0))
+    when (cmd_addsub) { in.in2 := one }
+    unless (cmd_fma || cmd_addsub) { in.in3 := zero }
+  }
+
+  val fma = Module(new hardfloat.MulAddRecFN(expWidth, sigWidth))
+  fma.io.op := in.cmd
+  fma.io.roundingMode := in.rm
+  fma.io.a := in.in1
+  fma.io.b := in.in2
+  fma.io.c := in.in3
+
+  val res = Wire(new HFPResult)
+  res.data := Cat(UInt((BigInt(1) << (fLen - (expWidth + sigWidth))) - 1), fma.io.out)
+  res.exc := fma.io.exceptionFlags
+  io.out := Pipe(valid, res, latency-1)
+}
+
 // Jecy
 // in : Record HFP
 // out: Int
@@ -42,12 +91,12 @@ class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
     override def cloneType = new Output().asInstanceOf[this.type]
   }
   val io = new Bundle {
-    val in = Valid(new FPInput).flip
-    val as_double = new FPInput().asOutput
+    val in = Valid(new HFPInput).flip
+    val as_double = new HFPInput().asOutput
     val out = Valid(new Output)
   }
 
-  val in = Reg(new FPInput)
+  val in = Reg(new HFPInput)
   val valid = Reg(next=io.in.valid)
 
 
@@ -107,13 +156,13 @@ class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
 // out: Record HFP
 class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
   val io = new Bundle {
-    val in = Valid(new FPInput).flip
-    val out = Valid(new FPResult)
+    val in = Valid(new HFPInput).flip
+    val out = Valid(new HFPResult)
   }
 
   val in = Pipe(io.in)
 
-  val mux = Wire(new FPResult)
+  val mux = Wire(new HFPResult)
   mux.exc := Bits(0)
   mux.data := hardfloat.recFNFromFN(hExpWidth, hSigWidth, in.bits.in1)
 
@@ -147,8 +196,8 @@ class IntToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
 // out: Record HFP
 class HFPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     val io = new Bundle {
-      val in = Valid(new FPInput).flip
-      val out = Valid(new FPResult)
+      val in = Valid(new HFPInput).flip
+      val out = Valid(new HFPResult)
       val lt = Bool(INPUT) // from FPToInt
     }
 
@@ -158,7 +207,7 @@ class HFPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
     val fsgnj_h = Cat(signNum(16), in.bits.in1(15, 0))
     val fsgnj = fsgnj_h
 
-    val mux = Wire(new FPResult)
+    val mux = Wire(new HFPResult)
     mux.exc := UInt(0)
     mux.data := fsgnj
 
@@ -207,8 +256,8 @@ class HFPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) 
 // out: Record HFP
 class FPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     val io = new Bundle {
-      val in = Valid(new FPInput).flip
-      val out = Valid(new FPResult)
+      val in = Valid(new HFPInput).flip
+      val out = Valid(new HFPResult)
     }
 
     val in = Pipe(io.in)
@@ -225,7 +274,7 @@ class FPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
     //   case fLen => unrec_mem
     // }
 
-    val mux = Wire(new FPResult)
+    val mux = Wire(new HFPResult)
     mux.exc := UInt(0)
     //mux.data := Cat(Fill(48,in.bits.in1(64)),in.bits.in1(15,0))
     //mux.data := hardfloat.recFNFromFN(hExpWidth, hSigWidth, unrec_int)
@@ -240,7 +289,7 @@ class FPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
             val s2h = Module(new hardfloat.RecFNToRecFN(sExpWidth, sSigWidth, hExpWidth, hSigWidth))
             s2h.io.in := in.bits.in1
             s2h.io.roundingMode := in.bits.rm
-            mux.data := Cat(UInt((BigInt(1) << (fLen - 48)) - 1), s2h.io.out)
+            mux.data := Cat(UInt((BigInt(1) << (fLen - 51)) - 1), s2h.io.out)
             mux.exc := s2h.io.exceptionFlags
           }.otherwise {
             val d2h = Module(new hardfloat.RecFNToRecFN(dExpWidth, dSigWidth, hExpWidth, hSigWidth))
@@ -260,11 +309,11 @@ class FPToHFP(val latency: Int)(implicit p: Parameters) extends FPUModule()(p) {
 // out: Record FP 
 class HFPToFP(implicit p: Parameters) extends FPUModule()(p) {
   val io = new Bundle {
-    val in = Valid(new FPInput).flip
-    val out = Valid(new FPResult)
+    val in = Valid(new HFPInput).flip
+    val out = Valid(new HFPResult)
   }
 
-  val in = Reg(new FPInput)
+  val in = Reg(new HFPInput)
   val valid = Reg(next=io.in.valid)
 
   when (io.in.valid) {

@@ -31,6 +31,7 @@ trait HasCoreParameters extends HasTileParameters {
 
   val xLen = p(XLen)
   val fLen = xLen // TODO relax this
+  val hfLen =  xLen
   require(xLen == 32 || xLen == 64)
 
   val usingMulDiv = coreParams.mulDiv.nonEmpty
