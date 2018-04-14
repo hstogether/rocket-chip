@@ -43,9 +43,9 @@ object FPConstants
   def FCMD_MV_FX =  BitPat("b??1??")
   def FCMD_MV_FH =  BitPat("b11101")
   def FCMD_X =      BitPat("b?????")
-  def FCMD_HFS =    BitPat("b??000")
-  def FCMD_HPR =    BitPat("b??001")
-  def FCMD_PAL =    BitPat("b??011")
+  def FCMD_HFS =    BitPat("b1?000")
+  def FCMD_HPR =    BitPat("b1?001")
+  def FCMD_PAL =    BitPat("b1?011")
   val FCMD_WIDTH = 5
 
   val RM_SZ = 3

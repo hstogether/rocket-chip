@@ -143,12 +143,12 @@ class HFPToInt(implicit p: Parameters) extends FPUModule()(p) {
   io.out.bits.lt := dcmp.io.lt
   io.as_double := in
 
-  printf("tile-HFPToInt--------------------------------------------------------------------------\n")
-  printf("tile-HFPToInt-in.valid=[%d]    in.in1.data=[%x]\n",
-                        io.in.valid.asUInt, in.in1)
-  printf("tile-HFPToInt-io.out.valid=[%d]    io.out.bits.toint=[%x]\n",
-                        io.out.valid.asUInt, io.out.bits.toint)
-  printf("tile-HFPToInt--------------------------------------------------------------------------\n")
+  // printf("tile-HFPToInt--------------------------------------------------------------------------\n")
+  // printf("tile-HFPToInt-in.valid=[%d]    in.in1.data=[%x]\n",
+  //                       io.in.valid.asUInt, in.in1)
+  // printf("tile-HFPToInt-io.out.valid=[%d]    io.out.bits.toint=[%x]\n",
+  //                       io.out.valid.asUInt, io.out.bits.toint)
+  // printf("tile-HFPToInt--------------------------------------------------------------------------\n")
 }
 
 // Jecy
@@ -354,12 +354,12 @@ class HFPToFP(implicit p: Parameters) extends FPUModule()(p) {
 
   io.out.valid := valid
 
-  printf("tile-HFPToFP--------------------------------------------------------------------------\n")
-  printf("tile-HFPToFP-in.valid=[%d]    in.in1.data=[%x]\n",
-                       io.in.valid.asUInt, in.in1)
-  printf("tile-HFPToFP-io.out.valid=[%d]    io.out.bits.data=[%x]\n",
-                       io.out.valid.asUInt, io.out.bits.data)
-  printf("tile-HFPToFP--------------------------------------------------------------------------\n")
+  // printf("tile-HFPToFP--------------------------------------------------------------------------\n")
+  // printf("tile-HFPToFP-in.valid=[%d]    in.in1.data=[%x]\n",
+  //                      io.in.valid.asUInt, in.in1)
+  // printf("tile-HFPToFP-io.out.valid=[%d]    io.out.bits.data=[%x]\n",
+  //                      io.out.valid.asUInt, io.out.bits.data)
+  // printf("tile-HFPToFP--------------------------------------------------------------------------\n")
 
 
 }
